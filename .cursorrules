@@ -1,0 +1,51 @@
+{
+    "package_manager": "conda",
+    "environment_file": "environment.yml",
+    "python_version": "3.12",
+    "auto_activate_base": false,
+    "create_environment_if_missing": true,
+    "install_dependencies_command": "conda env update -f environment.yml",
+    "rules": {
+        "prefer_conda_forge": true,
+        "use_mamba_if_available": true,
+        "auto_update_environment": true,
+        "transcript_handling": {
+            "primary_source": "whisper_transcript",
+            "speaker_verification": "pasted_transcript",
+            "analysis_scope": "full_podcast",
+            "paths": {
+                "pasted_transcript": "data/raw/pasted_transcript.txt",
+                "raw_transcript": "data/raw/raw_transcript.html"
+            }
+        },
+        "file_organization": {
+            "full_podcast": {
+                "video": "data/raw/full_podcast/full_video.mp4",
+                "whisper_transcript": "data/processed/full_podcast/whisper_output.json",
+                "segments": "data/processed/full_podcast/segments.json",
+                "analysis": {
+                    "discourse_patterns": "data/processed/full_podcast/discourse_patterns",
+                    "audio_segments": "data/processed/full_podcast/audio_segments.json",
+                    "montages": "data/processed/full_podcast/video_montages"
+                }
+            },
+            "sample_segment": {
+                "video": "data/raw/sample_segment/segment_video.mp4",
+                "audio": "data/raw/sample_segment/sample_segment.m4a",
+                "whisper_transcript": "data/processed/sample_segment/whisper_output.json",
+                "segments": "data/processed/sample_segment/segments.json",
+                "analysis": {
+                    "discourse_patterns": "data/processed/sample_segment/discourse_patterns",
+                    "audio_segments": "data/processed/sample_segment/audio_segments.json",
+                    "montages": "data/processed/sample_segment/video_montages"
+                }
+            }
+        },
+        "whisper_settings": {
+            "model": "medium",
+            "language": "en",
+            "word_timestamps": true,
+            "verbose": true
+        }
+    }
+} 

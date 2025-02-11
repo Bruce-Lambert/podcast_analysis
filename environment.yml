@@ -1,0 +1,23 @@
+name: podcast_analysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - textblob
+  - librosa
+  - plotly
+  - ffmpeg
+  - pip
+  - pip:
+    - openai-whisper
+    - pydub
+  - pytorch
+  - torchaudio
+  - pyannote.audio
+  - torch-audiomentations
+  - speechbrain 
