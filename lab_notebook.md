@@ -176,35 +176,35 @@ Today's session focused on consolidating code, improving the analysis pipeline, 
 - All visualizations are saved in high resolution (300 DPI)
 - Remember to test the FCPXML import with the actual video file 
 
-## Session: February 11, 2025 (Update)
+## Session: February 11, 2025 (Afternoon Update)
 
-### Transcript Sources Review
-Currently have multiple transcript sources in `data/raw`:
-1. `pasted_transcript.txt` - Our manually prepared transcript
-2. `raw_transcript.html` - HTML transcript from lexfridman.com
-3. MacWhisper outputs (new):
-   - `full_video.whisper` - Complete MacWhisper output
-   - `macwhisper_full_video.vtt` - VTT format with timestamps
-4. Previous Whisper run (3.5-hour run) - Output location unknown
+### Debug Session and Working Configuration
 
-### Current Organization
-All transcripts currently stored in `data/raw` directory. This keeps things simple while we:
-- Compare different transcript sources
-- Evaluate which format works best for our analysis
-- Determine the optimal organization structure
+After encountering issues with Python package imports, we identified the correct configuration for running the discourse analysis:
 
-### Notes
-- MacWhisper successfully transcribed the full podcast in two formats:
-  - Native `.whisper` format containing complete analysis
-  - VTT format with precise timestamp information
-- Previous whisper.cpp implementation attempts were not efficient enough
-- Need to locate output from the 3.5-hour Whisper run if possible
+1. **Environment Configuration**
+   - Conda environment: `podcast_analysis`
+   - Python version: 3.12 (from conda, not system Python)
+   - Key packages: matplotlib 3.10.0, seaborn 0.13.2
 
-### Next Steps
-1. Compare accuracy between available transcript sources
-2. Test analysis scripts with both `.whisper` and `.vtt` format inputs
-3. Document differences between transcript versions
-4. Consider optimal directory structure once we determine which transcripts are most useful 
+2. **Working Command**
+```bash
+conda run -n podcast_analysis python scripts/analyze_discourse.py data/raw/pasted_transcript.txt
+```
+
+### Important Notes
+- Must use `conda run` to ensure the correct Python interpreter is used
+- System Python (/opt/homebrew/bin/python3) should NOT be used
+- All required packages (matplotlib, seaborn, etc.) are properly installed in the conda environment
+- This configuration successfully reproduces the analysis results from last night's session
+
+### Analysis Results Verification
+- Correct speaker word counts maintained
+- Proper "right" usage analysis (Dylan: 24.40 per 1000 words)
+- Accurate filtering of compound phrases
+- Visualization generation working as expected
+
+This entry documents the working configuration to ensure reproducibility of the analysis pipeline.
 
 ## Future Enhancements and Ideas
 (Added February 11, 2025)
