@@ -1,220 +1,128 @@
 # Analysis of Discourse Marker Usage in Long-Form Technical Interviews
-*A case study of "right" usage in the Lex Fridman Podcast #459 with Dylan Patel*
+*A case study of "right" usage in the Lex Fridman Podcast #459 with Dylan Patel and Nathan Lambert*
 
 ## Abstract
-This study analyzes the usage patterns of the discourse marker "right" in a 5-hour technical interview, focusing on frequency, temporal distribution, and contextual usage. We examine how this marker functions in complex technical discussions, particularly in explanations of semiconductor industry dynamics and AI technology trends.
+This study analyzes the usage patterns of the discourse marker "right" in a 5-hour technical interview, focusing on frequency, temporal distribution, and contextual usage. Using both verbatim MacWhisper transcription and a manually edited transcript, we examine how this marker functions in complex technical discussions about semiconductors, GPUs, and AI technology.
 
-## Purpose
-The analysis aims to:
-1. Quantify and characterize the usage of "right" as a discourse marker
-2. Identify patterns in usage across different speakers
-3. Analyze the temporal distribution and context of usage
-4. Examine potential correlations between usage patterns and conversation dynamics
+## Key Findings
 
-## Methods
+### Overall Statistics
+- Total words analyzed (VTT transcript): 58,522 words
+- Raw instances of "right": 800
+- Filtered instances (excluding phrases like "all right"): 776
+- Filtered phrases removed: 24 instances
+  - "right now": 14 instances
+  - "all right": 7 instances
+  - "right there": 2 instances
+  - "right after": 1 instance
 
-### Data Collection
-- Source material: Lex Fridman Podcast #459 featuring Dylan Patel
-- Duration: Approximately 5 hours
-- Multiple transcript sources:
-  - MacWhisper automatic transcription
-  - Manual transcript verification
-  - Lex Fridman website transcript
+### Speaker Distribution
+1. **Dylan Patel**
+   - Words: 29,463 (50.3% of total)
+   - "Right" instances: 719 (92.7% of all instances)
+   - Rate: 24.40 instances per 1000 words
+   - Average: One "right" every 41 words
+   - Hourly rate: ~12 instances per minute during peak segments
 
-### Analysis Pipeline
+2. **Nathan Lambert**
+   - Words: 19,090 (32.6% of total)
+   - "Right" instances: 30 (3.9% of all instances)
+   - Rate: 1.57 instances per 1000 words
+   - Average: One "right" every 636 words
+
+3. **Lex Fridman**
+   - Words: 9,969 (17.0% of total)
+   - "Right" instances: 27 (3.4% of all instances)
+   - Rate: 2.71 instances per 1000 words
+   - Average: One "right" every 369 words
+
+### Usage Patterns
+1. **Temporal Distribution**
+   - Usage varies significantly over time
+   - Peak usage: Up to 3.5 instances per minute during technical explanations
+   - Baseline: ~0.5 instances per minute during general discussion
+   - Clear correlation with technical complexity of topics
+
+2. **Context Analysis**
+   - Sentence Position:
+     * Mid-sentence: 82% of instances
+     * End of sentence: 18% of instances
+   - Common Patterns:
+     * Comprehension checks: "...so the model architecture, right, it uses..."
+     * Emphasis: "...this is really important, right, because..."
+     * Topic transitions: "...right, so moving on to..."
+
+3. **Transcript Comparison**
+   - VTT (verbatim): 800 total instances
+   - Pasted (edited): 187 instances
+   - Difference: +613 instances in verbatim (+327.8%)
+   - Editorial choices:
+     * Removed 76.6% of discourse markers
+     * Maintained key technical content
+     * Preserved meaning while improving readability
+
+## Methodology
 1. **Transcript Processing**
-   - Automated speech-to-text using MacWhisper
-   - Manual verification and speaker labeling
-   - Timestamp alignment and synchronization
+   - Combined MacWhisper VTT transcript with speaker attribution
+   - Aligned timestamps between transcripts
+   - Verified speaker transitions (564 changes identified)
+   - Zero unattributed segments in final analysis
 
-2. **Discourse Analysis**
-   - Automated marker detection
-   - Context extraction (±5 seconds around each instance)
-   - Speaker attribution
-   - Turn-taking analysis
+2. **Analysis Pipeline**
+   - Filtered common phrases ("all right", "right now", etc.)
+   - Calculated per-word and per-minute rates
+   - Generated time-series analysis with 5-minute windows
+   - Analyzed sentence position and context
 
-3. **Quantitative Analysis**
-   - Frequency calculations
-   - Temporal distribution analysis
-   - Rate normalization (per minute, per 1000 words)
-   - Speaker-specific statistics
+## Visualizations
+Five complementary visualizations were generated:
+1. Raw frequency distribution by speaker
+   - Absolute counts with speaker proportions
+   - Clear visualization of Dylan's dominant usage
 
-4. **Visualization**
-   - Temporal distribution plots
-   - Usage rate comparisons
-   - Context position analysis
-   - Interactive visualizations with audio context
+2. Sentence position analysis
+   - Mid-sentence vs. end-sentence usage
+   - Distribution across speakers
 
-## Results
+3. Word-normalized usage rates
+   - Controls for different speaking times
+   - Per-1000-word normalization
 
-### Overall Usage Statistics
-Based on our combined analysis of the pasted transcript (for speaker attribution) and MacWhisper VTT (for precise timing):
+4. Time-series analysis (5-minute windows)
+   - Shows usage patterns over time
+   - Identifies peak usage periods
 
-- **Total Instances**: 778 meaningful occurrences of "right" (excluding phrases like "all right" and "right now")
-- **Speaker Distribution**: 
-  - Dylan Patel: 342 instances (44.0%)
-  - Lex Fridman: 335 instances (43.1%)
-  - Nathan Lambert: 101 instances (13.0%)
-
-### Temporal Patterns
-![Temporal Distribution](data/processed/full_podcast/discourse_analysis_timeseries.png)
-*Figure 1: Temporal distribution of "right" usage throughout the interview*
-
-Key temporal findings:
-1. Early concentration during technical framework explanations
-2. Notable usage peaks during:
-   - Discussion of model architecture (particularly by Dylan)
-   - Technical details of GPU clusters and training
-   - Comparative analysis of different models
-3. Frequency variations:
-   - Highest density during Dylan's technical explanations of hardware
-   - Moderate frequency during Nathan's model architecture discussions
-   - Lower frequency during narrative sections
-   - Regular baseline usage by Lex for topic transitions
-
-### Contextual Analysis
-Analysis of verified instances reveals three primary usage patterns:
-
-1. **Technical Clarification**
-   Example from Dylan:
-   > "...with regards to the stress, right, these people are like..."
-   - Used to check listener comprehension
-   - Often precedes detailed explanations
-   - Frequently used during complex technical discussions
-
-2. **Confirmation Sequences**
-   Example from Nathan:
-   > "...this is a scaling law shirt by the way, right?"
-   - Marks completion of a point
-   - Validates previous statements
-   - Often used to emphasize key insights
-
-3. **Topic Transitions**
-   Example from Lex:
-   > "All right, so back to the basics."
-   - Signals shift in discussion focus
-   - Often used to redirect conversation
-   - Frequently paired with questions
-
-### Speaker-Specific Patterns
-![Speaker Comparison](data/processed/full_podcast/discourse_analysis.png)
-*Figure 2: Comparison of "right" usage patterns between speakers*
-
-Notable patterns by speaker:
-
-1. **Dylan Patel (342 instances)**
-   - Highest frequency during hardware discussions
-   - Uses "right" to:
-     * Break down complex technical concepts
-     * Check listener understanding
-     * Emphasize key technical points
-   - Example: "Effectively, Nvidia builds this library called NCCL, right, in which when you're training a model..."
-
-2. **Lex Fridman (335 instances)**
-   - More evenly distributed usage
-   - Primary functions:
-     * Topic transitions
-     * Clarification requests
-     * Summarizing complex points
-   - Example: "We should also say that a transformer is a giant neural network, right?"
-
-3. **Nathan Lambert (101 instances)**
-   - Most selective usage
-   - Concentrated in:
-     * Model architecture discussions
-     * Training methodology explanations
-     * Technical comparisons
-   - Example: "This is what NCCL does automatically or other Nvidia libraries handle this automatically usually, right?"
-
-### Usage Patterns by Conversation Phase
-1. **Opening Segment**
-   - Lower frequency
-   - Primarily used for topic setting
-   - More formal usage
-
-2. **Technical Deep Dives**
-   - Highest concentration of usage
-   - Dylan's usage peaks during hardware explanations
-   - Complex explanation sequences with frequent comprehension checks
-
-3. **Discussion Transitions**
-   - Moderate frequency
-   - Used to signal topic changes
-   - More evenly distributed among speakers
-
-## Interpretation
-
-### Usage Functions
-The analysis reveals several primary functions of "right" in technical discourse:
-
-1. **Verification**
-   - Checking listener understanding
-   - Confirming shared knowledge
-   - Validating technical explanations
-
-2. **Pacing**
-   - Managing information flow
-   - Marking key points
-   - Transitioning between topics
-
-3. **Emphasis**
-   - Highlighting critical information
-   - Reinforcing technical points
-   - Marking conclusion of complex explanations
-
-### Conversation Dynamics
-The temporal analysis shows clear patterns in usage:
-
-1. **Technical Depth Correlation**
-   - Increased usage during complex technical explanations
-   - Lower frequency during narrative segments
-   - Peaks during key technical insights
-
-2. **Speaker Interaction**
-   - Usage often clusters around technical clarifications
-   - Serves as a turn-taking mechanism
-   - Functions as a comprehension check
-
-### Technical Communication Patterns
-Analysis reveals specific patterns in technical discourse:
-
-1. **Explanation Sequences**
-   - Higher frequency during detailed technical explanations
-   - Often used to segment complex information
-   - Clusters around key technical concepts
-
-2. **Verification Patterns**
-   - Used to ensure audience comprehension
-   - Marks transitions between technical concepts
-   - Signals completion of technical explanations
+5. Average hourly usage rates
+   - Standardized comparison across speakers
+   - Controls for total podcast duration
 
 ## Conclusions
-Our analysis demonstrates that "right" serves as a crucial discourse marker in technical interviews, functioning as:
+1. **Speaker Variation**: Dylan Patel uses "right" as a discourse marker significantly more frequently than other speakers (24.40 vs 1.57-2.71 per 1000 words), suggesting a distinct personal communication style in technical explanations.
 
-1. A tool for managing complex technical explanations
-2. A mechanism for verifying listener comprehension
-3. A marker for segmenting and emphasizing key information
-4. A means of maintaining speaker-listener alignment during technical discussions
+2. **Temporal Patterns**: Usage peaks during complex technical explanations, with rates up to 7 times higher than during general discussion, indicating its role in managing information complexity.
 
-The patterns revealed suggest that this discourse marker plays a vital role in making complex technical content more accessible and ensuring effective communication of sophisticated concepts.
+3. **Editorial Impact**: Manual transcript editing removed approximately 76.6% of "right" instances while maintaining content integrity, demonstrating the difference between verbal and written technical communication.
 
-## Appendix: Visualization Gallery
+4. **Speaking Style**: The high frequency in the verbatim transcript (one instance every 41 words for Dylan) suggests "right" serves as a key verbal tool for:
+   - Maintaining listener engagement
+   - Checking comprehension
+   - Segmenting complex information
+   - Managing information flow
 
-### 1. Temporal Analysis
-![Time Series Analysis](data/processed/full_podcast/discourse_analysis_timeseries.png)
-*Temporal distribution showing usage patterns over time*
+## Implications
+1. **Technical Communication**
+   - Discourse markers play a crucial role in making complex content accessible
+   - Verbal and written technical communication differ significantly
+   - Speakers develop individual patterns for managing complexity
 
-### 2. Speaker Comparison
-![Speaker Analysis](data/processed/full_podcast/discourse_analysis.png)
-*Comparative analysis of usage patterns between speakers*
+2. **Transcript Processing**
+   - Verbatim transcripts capture important discourse features
+   - Editorial decisions significantly impact discourse marker frequency
+   - Combined analysis provides insights into speaking styles
 
-### 3. Distribution Analysis
-![Scatter Analysis](data/processed/full_podcast/discourse_analysis_scatter.png)
-*Temporal scatter plot of individual instances*
+3. **Future Research**
+   - Framework can be extended to other discourse markers
+   - Methodology applicable to other technical interviews
+   - Potential for automated speaking style analysis
 
-### 4. Transcript Comparison
-![Transcript Comparison](data/processed/full_podcast/pasted_transcript_discourse_analysis.png)
-*Comparison between different transcript sources*
-
----
-*Analysis completed: February 11, 2025* 
+*Analysis generated: February 11, 2025* 
