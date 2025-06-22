@@ -42,19 +42,37 @@ class DiscourseAnalyzer:
 
         if is_word_based:
             # High-accuracy word-based analysis
-            for i, segment in enumerate(self.segments):
-                if segment['word'].strip().lower() == 'right':
-                    # Check for excluded phrases by looking at surrounding words
-                    full_phrase_text = " ".join(
-                        self.segments[j]['word'] for j in range(max(0, i-2), min(len(self.segments), i+3))
-                    ).lower()
-                    
+            # Pre-process segments to have a clean list of lower-case words
+            words = [seg['word'].strip().lower() for seg in self.segments]
+
+            for i, word in enumerate(words):
+                if word == 'right':
                     is_excluded = False
+                    # Check for excluded phrases using word-level matching
                     for phrase in phrases_to_exclude:
-                        if phrase in full_phrase_text:
-                            is_excluded = True
-                            excluded_counts[phrase] += 1
-                            break
+                        phrase_words = phrase.split()
+                        try:
+                            # Find where "right" is in the phrase, e.g., 1 for "all right"
+                            right_index_in_phrase = phrase_words.index('right')
+                            
+                            # Determine the start and end of the phrase in the main words list
+                            start_index = i - right_index_in_phrase
+                            end_index = start_index + len(phrase_words)
+
+                            if start_index < 0:
+                                continue
+
+                            # Extract the candidate phrase from the main words list
+                            candidate_phrase = words[start_index:end_index]
+                            
+                            if candidate_phrase == phrase_words:
+                                is_excluded = True
+                                excluded_counts[phrase] += 1
+                                break
+                        except ValueError:
+                            # "right" not in phrase_words, should not happen with default list
+                            continue
+                    
                     if is_excluded:
                         continue
                     
@@ -62,6 +80,7 @@ class DiscourseAnalyzer:
                     context_words = [self.segments[j]['word'] for j in range(max(0, i-10), min(len(self.segments), i+11))]
                     context = " ".join(context_words)
                     
+                    segment = self.segments[i] # Get the original segment for metadata
                     right_instances.append({
                         'start_time': segment['start'],
                         'end_time': segment['end'],

@@ -44,15 +44,19 @@ def main(pasted_transcript_path, vtt_path=None, whisper_json_path=None, accurate
     print(f"Found {len(right_instances)} instances of 'right'.")
     print(f"Excluded phrases counts: {excluded_phrases}")
 
-    # 3. Create visualizations (only in standard mode for now)
-    if not accurate:
-        print("\nStep 3: Creating visualizations...")
-        visualizer = Visualizer()
-        visualizer.plot_right_usage_by_speaker(right_instances)
-        visualizer.plot_right_usage_over_time(right_instances)
-        print("Visualizations created.")
-    else:
-        print("\nStep 3: Skipping visualizations in accurate mode.")
+    # 3. Create visualizations
+    print("\nStep 3: Creating visualizations...")
+    visualizer = Visualizer()
+    visualizer.plot_right_usage_by_speaker(right_instances)
+
+    if accurate:
+        # Get total podcast duration for x-axis in time plot
+        last_segment = parsed_data[-1] if parsed_data else {}
+        total_duration = last_segment.get('end', 0)
+        visualizer.plot_usage_over_time_accurate(right_instances, total_duration)
+        visualizer.plot_usage_dot_plot(right_instances, total_duration)
+    
+    print("Visualizations created.")
 
     # 4. Generate Video Assets (only in accurate mode)
     if accurate:
