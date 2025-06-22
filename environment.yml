@@ -22,4 +22,8 @@ dependencies:
     - webvtt-py
     - pyannote.audio
     - torch-audiomentations
-    - speechbrain 
+    - speechbrain
+    - myprosody
+    - ipython
+    - praat-parselmouth
+    - elevenlabs 
