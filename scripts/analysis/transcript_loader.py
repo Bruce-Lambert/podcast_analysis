@@ -61,25 +61,72 @@ class VTTParser:
 class TranscriptParser:
     """Handles the ingestion and parsing of podcast transcripts."""
     
-    def __init__(self, pasted_transcript_path, vtt_path=None):
+    def __init__(self, pasted_transcript_path, vtt_path=None, whisper_json_path=None):
         self.pasted_transcript_path = Path(pasted_transcript_path)
         self.vtt_path = Path(vtt_path) if vtt_path else None
+        self.whisper_json_path = Path(whisper_json_path) if whisper_json_path else None
         self.speakers = {'Dylan Patel', 'Nathan Lambert', 'Lex Fridman'}
         
     def parse(self):
         """Parse transcripts into a structured format."""
         # First parse the pasted transcript to get speaker segments
         speaker_segments = self._parse_pasted_transcript()
+
+        if self.whisper_json_path and self.whisper_json_path.exists():
+            # If we have a Whisper JSON file, use it for word-level timestamps
+            print("Using Whisper JSON for high-accuracy timestamps.")
+            whisper_segments = self._parse_whisper_json()
+            return self._combine_with_speaker_data(whisper_segments, speaker_segments)
         
-        if self.vtt_path and self.vtt_path.exists():
+        elif self.vtt_path and self.vtt_path.exists():
             # If we have a VTT file, use it for verbatim content
+            print("Using VTT file for transcript content.")
             vtt_parser = VTTParser(self.vtt_path)
             vtt_segments = vtt_parser.parse()
             return self._combine_transcripts(speaker_segments, vtt_segments)
         else:
-            # If no VTT file, combine segments by speaker
+            # If no VTT/JSON file, combine segments by speaker from pasted transcript
+            print("Using pasted transcript only.")
             return self._combine_speaker_segments(speaker_segments)
     
+    def _parse_whisper_json(self):
+        """Load and parse the Whisper JSON output file."""
+        with open(self.whisper_json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get('segments', [])
+
+    def _find_speaker_for_time(self, timestamp, speaker_segments):
+        """Finds the speaker for a given timestamp."""
+        current_speaker = "Unknown"
+        for segment in speaker_segments:
+            if segment['timestamp'] is not None and segment['timestamp'] <= timestamp:
+                current_speaker = segment['speaker']
+            else:
+                break
+        return current_speaker
+
+    def _combine_with_speaker_data(self, whisper_segments, speaker_segments):
+        """Combines whisper segments with speaker attribution."""
+        enriched_segments = []
+        speaker_segments.sort(key=lambda x: x['timestamp'] if x['timestamp'] is not None else float('inf'))
+        
+        for whisper_seg in whisper_segments:
+            segment_start_time = whisper_seg['start']
+            speaker = self._find_speaker_for_time(segment_start_time, speaker_segments)
+            
+            # Add speaker info to each word in the segment
+            if 'words' in whisper_seg:
+                for word_info in whisper_seg['words']:
+                    enriched_segments.append({
+                        'speaker': speaker,
+                        'word': word_info['word'],
+                        'start': word_info['start'],
+                        'end': word_info['end']
+                    })
+        
+        print(f"Successfully combined Whisper JSON with speaker data, producing {len(enriched_segments)} word segments.")
+        return enriched_segments, [] # Return empty list for unattributed for now
+
     def _parse_pasted_transcript(self):
         """Parse the pasted transcript to get speaker segments with timestamps."""
         with open(self.pasted_transcript_path, 'r', encoding='utf-8') as file:
