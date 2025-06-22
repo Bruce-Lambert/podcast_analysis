@@ -313,3 +313,32 @@ This entry documents the working configuration to ensure reproducibility of the 
 - Maintain consistent code style
 - Consider backward compatibility
 - Plan for scalability 
+
+## Session: February 11, 2025 (Afternoon Refactoring Plan)
+
+### Overview
+After successfully recovering and documenting the working state in the main branch, we're initiating a careful refactoring of the transcript processing code. This refactoring will be done in a separate feature branch to maintain the integrity of the working implementation.
+
+### Planned Changes
+1. **New Feature Branch**
+   - Created `feature/transcript-ingestion` branch from main
+   - Main branch preserved with working implementation
+   - All refactoring work isolated to new branch
+
+2. **Refactoring Goals**
+   - Separate transcript ingestion from discourse analysis
+   - Create dedicated modules for transcript processing
+   - Maintain current functionality of VTT and pasted transcript integration
+   - Ensure all existing analysis capabilities are preserved
+
+3. **Safety Measures**
+   - Working code preserved in main branch
+   - Creating backups of current working files
+   - Will maintain test coverage during refactoring
+   - Can revert to main branch if needed
+
+### Current Status
+- Main branch: Successfully running complete analysis
+- Analysis results verified and documented
+- Environment configuration documented
+- Ready to begin controlled refactoring 

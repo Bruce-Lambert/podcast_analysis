@@ -9,6 +9,17 @@
         "prefer_conda_forge": true,
         "use_mamba_if_available": true,
         "auto_update_environment": true,
+        "kiss_principle": {
+            "description": "Keep It Simple, Stupid (KISS)",
+            "guidelines": [
+                "Do not modify working code unless absolutely necessary",
+                "Do not add complexity or new features unless they are central to the current task",
+                "If it ain't broke, don't fix it",
+                "Prefer simple, working solutions over complex, 'clever' ones",
+                "Only refactor when there is a clear, pressing need",
+                "Maintain existing functionality during modifications"
+            ]
+        },
         "transcript_handling": {
             "primary_source": "whisper_transcript",
             "speaker_verification": "pasted_transcript",

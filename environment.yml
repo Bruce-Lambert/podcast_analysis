@@ -13,11 +13,13 @@ dependencies:
   - plotly
   - ffmpeg
   - pip
+  - scikit-learn
+  - pytorch
+  - torchaudio
   - pip:
     - openai-whisper
     - pydub
-  - pytorch
-  - torchaudio
-  - pyannote.audio
-  - torch-audiomentations
-  - speechbrain 
+    - webvtt-py
+    - pyannote.audio
+    - torch-audiomentations
+    - speechbrain 
