@@ -4,6 +4,7 @@ import json
 import math
 import argparse
 from elevenlabs.client import ElevenLabs
+from dotenv import load_dotenv
 
 def get_video_duration(video_path):
     """Gets the duration of a video file in seconds."""
@@ -52,14 +53,14 @@ def split_video(video_path, output_dir, num_chunks=2):
 
     return chunk_paths, chunk_duration
 
-def transcribe_chunk(client, file_path, num_speakers):
+def transcribe_chunk(client, file_path):
     """Transcribes a single video chunk using Eleven Labs API."""
     print(f"Transcribing {os.path.basename(file_path)}...")
     with open(file_path, "rb") as f:
         response = client.speech_to_text.convert(
             file=f,
-            number_of_speakers=num_speakers,
-            language="en"
+            model_id="scribe_v1",
+            diarize=True
         )
     print(f"Finished transcribing {os.path.basename(file_path)}.")
     # The response is already a deserialized JSON object (a Pydantic model)
@@ -92,12 +93,12 @@ def main():
     parser = argparse.ArgumentParser(description="Transcribe a video using Eleven Labs API, splitting it into chunks.")
     parser.add_argument("video_path", help="Path to the video file.")
     parser.add_argument("output_dir", help="Directory to save the final transcript and chunks.")
-    parser.add_argument("--num_speakers", type=int, default=2, help="Number of speakers in the video.")
     args = parser.parse_args()
 
+    load_dotenv()
     api_key = os.getenv("ELEVEN_API_KEY")
     if not api_key:
-        raise ValueError("ELEVEN_API_KEY environment variable not set.")
+        raise ValueError("ELEVEN_API_KEY not found. Please create a .env file in the project root with ELEVEN_API_KEY='your-key-here'")
 
     client = ElevenLabs(api_key=api_key)
     
@@ -109,7 +110,7 @@ def main():
     # 2. Transcribe each chunk
     transcripts = []
     for chunk_path in chunk_paths:
-        transcript = transcribe_chunk(client, chunk_path, args.num_speakers)
+        transcript = transcribe_chunk(client, chunk_path)
         transcripts.append(transcript)
 
     # 3. Merge the transcripts
