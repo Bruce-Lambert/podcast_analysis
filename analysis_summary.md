@@ -8,30 +8,30 @@ This study analyzes the usage patterns of the discourse marker "right" in a 5-ho
 
 ### Overall Statistics (ElevenLabs Verbatim Transcript)
 - Total words analyzed: 62,700 words
-- Filtered instances of "right": 955
-- Raw instances (including common phrases): 979
+- Filtered instances of "right": 999
+- Raw instances (including common phrases): 1008
 
 ### Speaker Distribution (Approximated)
 1. **Dylan Patel**
-   - Approx. Words: 32,850 (52.4% of total)
-   - "Right" instances: 944 (98.8% of all instances)
-   - Rate: 28.7 instances per 1000 words
+   - Approx. Words: 32,740 (52.3% of total)
+   - "Right" instances: 944 (94.3% of all instances)
+   - Rate: 28.8 instances per 1000 words
    - Average: One "right" every 35 words
 
 2. **Nathan Lambert**
-   - Approx. Words: 16,050 (25.6% of total)
-   - "Right" instances: 9 (0.9% of all instances)
-   - Rate: 0.56 instances per 1000 words
-   - Average: One "right" every 1,783 words
+   - Approx. Words: 15,872 (25.3% of total)
+   - "Right" instances: 32 (3.2% of all instances)
+   - Rate: 2.0 instances per 1000 words
+   - Average: One "right" every 496 words
 
 3. **Lex Fridman**
-   - Approx. Words: 13,800 (22.0% of total)
-   - "Right" instances: 2 (0.2% of all instances)
-   - Rate: 0.14 instances per 1000 words
-   - Average: One "right" every 6,900 words
+   - Approx. Words: 13,679 (21.8% of total)
+   - "Right" instances: 23 (2.3% of all instances)
+   - Rate: 1.7 instances per 1000 words
+   - Average: One "right" every 595 words
 
 ### Key Insights
-1. **Extreme Usage Pattern**: Dylan Patel's usage of "right" as a discourse marker is extreme, accounting for nearly 99% of all instances. His rate of use is over 50 times higher than Nathan Lambert's and over 200 times higher than Lex Fridman's.
+1. **Extreme Usage Pattern**: Dylan Patel's usage of "right" as a discourse marker is extreme, accounting for over 94% of all instances. His rate of use is roughly 14 times higher than Nathan Lambert's and about 17 times higher than Lex Fridman's.
 
 2. **Function as a "Thinking Tic"**: The high frequency (one instance every 35 words) suggests "right" serves as a primary verbal tool for Dylan Patel to structure complex thoughts, check for listener comprehension, and punctuate technical explanations in real-time.
 
@@ -54,7 +54,7 @@ The analysis is supported by visualizations showing:
 ## Conclusions
 The updated analysis, based on a high-precision transcript, confirms and sharpens the initial findings. The discourse marker "right" is not just a minor feature of the conversation but a defining characteristic of Dylan Patel's communication style in this technical context. The sheer volume of usage highlights its critical function for him in navigating and articulating extremely complex topics. This underscores the value of using verbatim, word-level data to capture the authentic texture and mechanisms of spoken technical communication, which are often sanitized away in edited transcripts.
 
-*Analysis based on verified ElevenLabs transcript, updated February 12, 2025*
+*Analysis based on verified ElevenLabs transcript, updated June 23, 2025*
 
 ---
 
