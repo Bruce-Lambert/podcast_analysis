@@ -40,7 +40,7 @@ class Visualizer:
         print(f"Saved speaker usage plot to {self.output_dir}")
 
     def plot_usage_over_time_accurate(self, instances, total_duration_seconds, window_minutes=5):
-        """Plot the usage of 'right' over time for each speaker from accurate data."""
+        """Plot the raw count of 'right' usage over time for each speaker."""
         window_sec = window_minutes * 60
         
         plt.figure(figsize=(15, 8))
@@ -55,6 +55,9 @@ class Visualizer:
         if len(bins) < 2: 
             print("Not enough duration to create time bins for plotting.")
             return
+            
+        # We will plot the center of each time window on the x-axis
+        bin_centers = (bins[:-1] + bins[1:]) / 2
 
         for speaker in sorted(list(speakers_with_instances)):
             speaker_instances = [inst for inst in instances if inst['speaker'] == speaker]
@@ -64,16 +67,14 @@ class Visualizer:
             # Use 'start_time' for accurate timestamps
             timestamps = [inst['start_time'] for inst in speaker_instances]
             
+            # This directly gives the raw count in each bin
             counts, _ = np.histogram(timestamps, bins=bins)
-            
-            # Normalize by the time window to get a rate
-            rates = counts / window_minutes
 
-            plt.plot(bins[:-1] / 3600, rates, label=speaker, marker='o', linestyle='-')
+            plt.plot(bin_centers / 3600, counts, label=speaker, marker='o', linestyle='-')
 
-        plt.title(f"Usage Rate of 'Right' Over Time ({window_minutes}-minute windows) (Accurate)")
-        plt.xlabel("Time (hours)")
-        plt.ylabel(f"Instances per {window_minutes} minutes")
+        plt.title(f"Raw Count of 'Right' Over Time ({window_minutes}-Minute Windows)")
+        plt.xlabel("Time in Podcast (Hours)")
+        plt.ylabel(f"Total Occurrences in Window")
         plt.legend()
         plt.grid(True, which='both', linestyle='--', linewidth=0.5)
         plt.tight_layout()

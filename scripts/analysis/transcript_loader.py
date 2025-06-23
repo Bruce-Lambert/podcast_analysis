@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import json
+from collections import defaultdict
 
 class VTTParser:
     """Parser for VTT format transcripts from MacWhisper."""
@@ -61,15 +62,23 @@ class VTTParser:
 class TranscriptParser:
     """Handles the ingestion and parsing of podcast transcripts."""
     
-    def __init__(self, pasted_transcript_path, vtt_path=None, whisper_json_path=None):
-        self.pasted_transcript_path = Path(pasted_transcript_path)
+    def __init__(self, pasted_transcript_path=None, vtt_path=None, whisper_json_path=None, elevenlabs_json_path=None):
+        self.pasted_transcript_path = Path(pasted_transcript_path) if pasted_transcript_path else None
         self.vtt_path = Path(vtt_path) if vtt_path else None
         self.whisper_json_path = Path(whisper_json_path) if whisper_json_path else None
+        self.elevenlabs_json_path = Path(elevenlabs_json_path) if elevenlabs_json_path else None
         self.speakers = {'Dylan Patel', 'Nathan Lambert', 'Lex Fridman'}
         
     def parse(self):
         """Parse transcripts into a structured format."""
-        # First parse the pasted transcript to get speaker segments
+        if self.elevenlabs_json_path and self.elevenlabs_json_path.exists():
+            print(f"Using Eleven Labs JSON for high-accuracy transcript: {self.elevenlabs_json_path}")
+            return self._parse_elevenlabs_json(), []
+
+        # Fallback to older methods if elevenlabs not present
+        if not self.pasted_transcript_path or not self.pasted_transcript_path.exists():
+             raise FileNotFoundError("pasted_transcript_path is required for VTT or Whisper sources.")
+        
         speaker_segments = self._parse_pasted_transcript()
 
         if self.whisper_json_path and self.whisper_json_path.exists():
@@ -80,52 +89,61 @@ class TranscriptParser:
         
         elif self.vtt_path and self.vtt_path.exists():
             # If we have a VTT file, use it for verbatim content
-            print("Using VTT file for transcript content.")
+            print(f"Using VTT file for transcript content: {self.vtt_path}")
             vtt_parser = VTTParser(self.vtt_path)
             vtt_segments = vtt_parser.parse()
-            return self._combine_transcripts(speaker_segments, vtt_segments)
+            # This method will need to be robust enough to handle the new VTT data
+            return self._combine_with_speaker_data_vtt(vtt_segments, speaker_segments)
+        
         else:
             # If no VTT/JSON file, combine segments by speaker from pasted transcript
             print("Using pasted transcript only.")
             return self._combine_speaker_segments(speaker_segments)
-    
+
+    def _parse_elevenlabs_json(self):
+        """Load and parse the Eleven Labs JSON, mapping speaker_id to names."""
+        speaker_mapping = {
+            "speaker_0": "Lex Fridman",
+            "speaker_1": "Nathan Lambert",
+            "speaker_2": "Dylan Patel" # Correct mapping
+        }
+
+        with open(self.elevenlabs_json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        word_list = data.get('words', [])
+        enriched_segments = []
+
+        main_speaker_ids = ["speaker_0", "speaker_1", "speaker_2"]
+
+        for word_info in word_list:
+            speaker_id = word_info.get('speaker_id')
+
+            # Only process words from the main speakers
+            if speaker_id not in main_speaker_ids:
+                continue
+
+            # Defensively check for required keys
+            if 'text' in word_info and 'start' in word_info and 'end' in word_info:
+                # Use the mapping but keep original ID if not found, to include all speakers
+                speaker_name = speaker_mapping.get(speaker_id, speaker_id) 
+
+                enriched_segments.append({
+                    'speaker': speaker_name,
+                    'word': word_info['text'],
+                    'start': word_info['start'],
+                    'end': word_info['end'],
+                    'speaker_id': speaker_id # Keep original ID for reference
+                })
+
+        print(f"Successfully parsed Eleven Labs JSON, producing {len(enriched_segments)} word segments.")
+        return enriched_segments
+
     def _parse_whisper_json(self):
         """Load and parse the Whisper JSON output file."""
         with open(self.whisper_json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return data.get('segments', [])
-
-    def _find_speaker_for_time(self, timestamp, speaker_segments):
-        """Finds the speaker for a given timestamp."""
-        current_speaker = "Unknown"
-        for segment in speaker_segments:
-            if segment['timestamp'] is not None and segment['timestamp'] <= timestamp:
-                current_speaker = segment['speaker']
-            else:
-                break
-        return current_speaker
-
-    def _combine_with_speaker_data(self, whisper_segments, speaker_segments):
-        """Combines whisper segments with speaker attribution."""
-        enriched_segments = []
-        speaker_segments.sort(key=lambda x: x['timestamp'] if x['timestamp'] is not None else float('inf'))
-        
-        for whisper_seg in whisper_segments:
-            segment_start_time = whisper_seg['start']
-            speaker = self._find_speaker_for_time(segment_start_time, speaker_segments)
-            
-            # Add speaker info to each word in the segment
-            if 'words' in whisper_seg:
-                for word_info in whisper_seg['words']:
-                    enriched_segments.append({
-                        'speaker': speaker,
-                        'word': word_info['word'],
-                        'start': word_info['start'],
-                        'end': word_info['end']
-                    })
-        
-        print(f"Successfully combined Whisper JSON with speaker data, producing {len(enriched_segments)} word segments.")
-        return enriched_segments, [] # Return empty list for unattributed for now
 
     def _parse_pasted_transcript(self):
         """Parse the pasted transcript to get speaker segments with timestamps."""
@@ -208,90 +226,6 @@ class TranscriptParser:
         except ValueError:
             return None
     
-    def _combine_transcripts(self, speaker_segments, vtt_segments):
-        """Combine speaker information with verbatim VTT content."""
-        combined_segments = []
-        current_speaker = None
-        unattributed_segments = []
-        
-        # Sort both segment lists by timestamp
-        speaker_segments.sort(key=lambda x: x['timestamp'] if x['timestamp'] is not None else float('inf'))
-        vtt_segments.sort(key=lambda x: x['timestamp'])
-        
-        # Create debug log
-        debug_info = {
-            'total_vtt_segments': len(vtt_segments),
-            'total_speaker_segments': len(speaker_segments),
-            'speaker_changes': [],
-            'unattributed_segments': [],
-            'alignment_issues': []
-        }
-        
-        # Find the speaker for each VTT segment based on timestamps
-        for i, vtt_seg in enumerate(vtt_segments):
-            # Find the closest speaker segment before this VTT segment
-            speaker_seg = None
-            for seg in speaker_segments:
-                if seg['timestamp'] is not None and seg['timestamp'] <= vtt_seg['timestamp']:
-                    speaker_seg = seg
-                else:
-                    break
-            
-            if speaker_seg:
-                new_speaker = speaker_seg['speaker']
-                if new_speaker != current_speaker:
-                    debug_info['speaker_changes'].append({
-                        'timestamp': vtt_seg['timestamp'],
-                        'previous_speaker': current_speaker,
-                        'new_speaker': new_speaker,
-                        'content_preview': vtt_seg['content'][:100]
-                    })
-                    current_speaker = new_speaker
-            
-            if current_speaker:
-                combined_segments.append({
-                    'speaker': current_speaker,
-                    'timestamp': vtt_seg['timestamp'],
-                    'content': vtt_seg['content']
-                })
-            else:
-                unattributed_segments.append({
-                    'timestamp': vtt_seg['timestamp'],
-                    'content': vtt_seg['content']
-                })
-                debug_info['unattributed_segments'].append({
-                    'timestamp': vtt_seg['timestamp'],
-                    'content_preview': vtt_seg['content'][:100]
-                })
-            
-            # Check for potential alignment issues
-            if i > 0 and current_speaker:
-                time_diff = vtt_seg['timestamp'] - vtt_segments[i-1]['timestamp']
-                if time_diff > 30:  # Flag gaps longer than 30 seconds
-                    debug_info['alignment_issues'].append({
-                        'timestamp': vtt_seg['timestamp'],
-                        'gap_duration': time_diff,
-                        'speaker': current_speaker,
-                        'content_preview': vtt_seg['content'][:100]
-                    })
-        
-        # Save debug information
-        debug_path = Path('data/processed/transcript_combination_debug.json')
-        debug_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(debug_path, 'w', encoding='utf-8') as f:
-            json.dump(debug_info, f, indent=2)
-        
-        # Print summary statistics
-        print("\nTranscript combination summary:")
-        print(f"Total VTT segments: {len(vtt_segments)}")
-        print(f"Total speaker segments: {len(speaker_segments)}")
-        print(f"Combined segments: {len(combined_segments)}")
-        print(f"Unattributed segments: {len(unattributed_segments)}")
-        print(f"Speaker changes: {len(debug_info['speaker_changes'])}")
-        print(f"Alignment issues: {len(debug_info['alignment_issues'])}")
-        
-        return combined_segments, unattributed_segments
-
     def get_word_counts(self):
         """Get word counts for each speaker from the pasted transcript."""
         segments = self._parse_pasted_transcript()
@@ -299,3 +233,70 @@ class TranscriptParser:
         for segment in segments:
             word_counts[segment['speaker']] += len(segment['content'].split())
         return word_counts
+
+    def _combine_with_speaker_data(self, whisper_segments, speaker_segments):
+        """Combines whisper segments with speaker attribution."""
+        enriched_segments = []
+        speaker_segments.sort(key=lambda x: x['timestamp'] if x['timestamp'] is not None else float('inf'))
+        
+        for whisper_seg in whisper_segments:
+            segment_start_time = whisper_seg['start']
+            speaker = self._find_speaker_for_time(segment_start_time, speaker_segments)
+            
+            # Add speaker info to each word in the segment
+            if 'words' in whisper_seg:
+                for word_info in whisper_seg['words']:
+                    enriched_segments.append({
+                        'speaker': speaker,
+                        'word': word_info['word'],
+                        'start': word_info['start'],
+                        'end': word_info['end']
+                    })
+        
+        print(f"Successfully combined Whisper JSON with speaker data, producing {len(enriched_segments)} word segments.")
+        return enriched_segments, [] # Return empty list for unattributed for now
+
+    def _combine_with_speaker_data_vtt(self, vtt_segments, speaker_segments):
+        """Combines VTT segments with speaker attribution."""
+        enriched_segments = []
+        speaker_segments.sort(key=lambda x: x['timestamp'] if x['timestamp'] is not None else float('inf'))
+
+        for vtt_seg in vtt_segments:
+            segment_start_time = vtt_seg['timestamp']
+            speaker = self._find_speaker_for_time(segment_start_time, speaker_segments)
+            
+            # Split content into words and create word-level segments
+            words = vtt_seg['content'].split()
+            # Estimate duration of each word
+            num_words = len(words)
+            segment_duration = 5.0  # Default duration if no next segment
+            
+            # Find time of next segment to estimate duration
+            current_index = vtt_segments.index(vtt_seg)
+            if current_index + 1 < len(vtt_segments):
+                segment_duration = vtt_segments[current_index + 1]['timestamp'] - segment_start_time
+            
+            if num_words > 0:
+                word_duration = segment_duration / num_words
+                for i, word in enumerate(words):
+                    word_start = segment_start_time + (i * word_duration)
+                    word_end = word_start + word_duration
+                    enriched_segments.append({
+                        'speaker': speaker,
+                        'word': word,
+                        'start': word_start,
+                        'end': word_end
+                    })
+
+        print(f"Successfully combined VTT with speaker data, producing {len(enriched_segments)} word segments.")
+        return enriched_segments, []
+
+    def _find_speaker_for_time(self, timestamp, speaker_segments):
+        """Finds the speaker for a given timestamp."""
+        current_speaker = "Unknown"
+        for segment in speaker_segments:
+            if segment['timestamp'] is not None and segment['timestamp'] <= timestamp:
+                current_speaker = segment['speaker']
+            else:
+                break
+        return current_speaker

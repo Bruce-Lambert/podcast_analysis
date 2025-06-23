@@ -26,4 +26,5 @@ dependencies:
     - myprosody
     - ipython
     - praat-parselmouth
-    - elevenlabs 
+    - elevenlabs
+    - python-dotenv 

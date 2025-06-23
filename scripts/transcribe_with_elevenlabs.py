@@ -3,8 +3,26 @@ import subprocess
 import json
 import math
 import argparse
+# from dotenv import load_dotenv # Bypassing this
 from elevenlabs.client import ElevenLabs
-from dotenv import load_dotenv
+from elevenlabs.core.api_error import ApiError
+import httpx
+
+def get_key_manually():
+    """Manually read the .env file to get the API key."""
+    try:
+        with open('.env', 'r') as f:
+            for line in f:
+                if line.strip().startswith('ELEVEN_API_KEY'):
+                    key = line.split('=', 1)[1].strip()
+                    # Remove surrounding quotes if they exist
+                    if (key.startswith("'") and key.endswith("'")) or \
+                       (key.startswith('"') and key.endswith('"')):
+                        return key[1:-1]
+                    return key
+    except FileNotFoundError:
+        return None
+    return None
 
 def get_video_duration(video_path):
     """Gets the duration of a video file in seconds."""
@@ -95,14 +113,19 @@ def main():
     parser.add_argument("output_dir", help="Directory to save the final transcript and chunks.")
     args = parser.parse_args()
 
-    load_dotenv()
-    api_key = os.getenv("ELEVEN_API_KEY")
+    # load_dotenv()
+    # api_key = os.getenv("ELEVEN_API_KEY")
+    api_key = get_key_manually()
+    
     if not api_key:
-        raise ValueError("ELEVEN_API_KEY not found. Please create a .env file in the project root with ELEVEN_API_KEY='your-key-here'")
+        raise ValueError("Could not find or read ELEVEN_API_KEY from .env file.")
 
-    client = ElevenLabs(api_key=api_key)
+    # Set a long timeout for the client to handle large file processing
+    timeout = httpx.Timeout(30.0 * 60.0) # 30 minutes
+    client = ElevenLabs(api_key=api_key, timeout=timeout)
     
     video_chunks_dir = os.path.join(args.output_dir, "video_chunks")
+    os.makedirs(video_chunks_dir, exist_ok=True)
 
     # 1. Split the video
     chunk_paths, chunk_duration = split_video(args.video_path, video_chunks_dir)

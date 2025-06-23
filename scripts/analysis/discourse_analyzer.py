@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 from datetime import timedelta
 import json
+import string # Import string module
 
 class DiscourseAnalyzer:
     """Analyzes discourse markers in a transcript."""
@@ -14,22 +15,24 @@ class DiscourseAnalyzer:
 
     def _calculate_initial_stats(self):
         """Calculate total words and word counts per speaker."""
-        is_word_based = 'word' in self.segments[0] if self.segments else False
+        # Check for a more reliable key first, like 'speaker_id' from ElevenLabs
+        is_word_based = 'speaker_id' in self.segments[0] if self.segments else False
 
         if is_word_based:
             for segment in self.segments:
+                # Use the 'speaker' key which should be remapped in main.py
                 self.word_counts_by_speaker[segment['speaker']] += 1
                 self.total_words += 1
-        else:
+        else: # Fallback for other transcript types
             for segment in self.segments:
-                words = segment['content'].split()
+                words = segment.get('content', '').split()
                 self.word_counts_by_speaker[segment['speaker']] += len(words)
                 self.total_words += len(words)
 
-    def analyze_right_usage(self, phrases_to_exclude=None):
+    def analyze_right_usage(self, output_path, phrases_to_exclude=None):
         """
         Analyzes the usage of the word 'right', excluding specified phrases.
-        This method can handle both segment-based and word-based data.
+        This now only handles word-based (high-accuracy) data.
         """
         if phrases_to_exclude is None:
             phrases_to_exclude = ['all right', 'right now', 'right there', 'right after']
@@ -37,97 +40,69 @@ class DiscourseAnalyzer:
         right_instances = []
         excluded_counts = defaultdict(int)
 
-        # Check if segments are word-based (high-accuracy) or content-based
-        is_word_based = 'word' in self.segments[0] if self.segments else False
+        # High-accuracy word-based analysis
+        words_data = self.segments # Keep original segments for metadata
 
-        if is_word_based:
-            # High-accuracy word-based analysis
-            # Pre-process segments to have a clean list of lower-case words
-            words = [seg['word'].strip().lower() for seg in self.segments]
+        for i, segment in enumerate(words_data):
+            # More robustly clean the word by removing all punctuation and making it lowercase
+            original_word = segment.get('word', '')
+            # Create a translation table to remove all punctuation
+            translator = str.maketrans('', '', string.punctuation)
+            word = original_word.translate(translator).strip().lower()
 
-            for i, word in enumerate(words):
-                if word == 'right':
-                    is_excluded = False
-                    # Check for excluded phrases using word-level matching
-                    for phrase in phrases_to_exclude:
-                        phrase_words = phrase.split()
-                        try:
-                            # Find where "right" is in the phrase, e.g., 1 for "all right"
-                            right_index_in_phrase = phrase_words.index('right')
-                            
-                            # Determine the start and end of the phrase in the main words list
-                            start_index = i - right_index_in_phrase
-                            end_index = start_index + len(phrase_words)
+            if word == 'right':
+                is_excluded = False
+                # Check for excluded phrases using word-level matching
+                for phrase in phrases_to_exclude:
+                    phrase_words = phrase.lower().split()
+                    try:
+                        # Find where "right" is in the phrase, e.g., 1 for "all right"
+                        right_index_in_phrase = phrase_words.index('right')
 
-                            if start_index < 0:
-                                continue
+                        # Determine the start and end of the phrase in the main words list
+                        start_index = i - right_index_in_phrase
+                        end_index = start_index + len(phrase_words)
 
-                            # Extract the candidate phrase from the main words list
-                            candidate_phrase = words[start_index:end_index]
-                            
-                            if candidate_phrase == phrase_words:
+                        if start_index < 0:
+                            continue
+
+                        if end_index <= len(words_data):
+                            candidate_words = [
+                                w.get('word', '').translate(translator).strip().lower()
+                                for w in words_data[start_index:end_index]
+                            ]
+
+                            if candidate_words == phrase_words:
                                 is_excluded = True
                                 excluded_counts[phrase] += 1
-                                break
-                        except ValueError:
-                            # "right" not in phrase_words, should not happen with default list
-                            continue
-                    
-                    if is_excluded:
+                                break # Move to next word once an exclusion is found
+                    except ValueError:
+                        # "right" not in phrase_words, should not happen with default list
                         continue
-                    
-                    # Get context directly from surrounding words
-                    context_words = [self.segments[j]['word'] for j in range(max(0, i-10), min(len(self.segments), i+11))]
-                    context = " ".join(context_words)
-                    
-                    segment = self.segments[i] # Get the original segment for metadata
-                    right_instances.append({
-                        'start_time': segment['start'],
-                        'end_time': segment['end'],
-                        'time_formatted': str(timedelta(seconds=int(segment['start']))),
-                        'context': context,
-                        'speaker': segment['speaker']
-                    })
-            analysis_path = 'data/processed/full_podcast/accurate_analysis_results.json'
-
-        else:
-            # Original content-based analysis
-            for segment in self.segments:
-                text = segment['content'].lower()
-                for match in re.finditer(r'\bright\b', text):
-                    is_excluded = False
-                    for phrase in phrases_to_exclude:
-                        phrase_match_start = text.find(phrase, match.start() - len(phrase) + 1, match.end() + len(phrase) -1)
-                        if phrase_match_start != -1 and phrase.find("right") + phrase_match_start == match.start():
-                           is_excluded = True
-                           excluded_counts[phrase] += 1
-                           break
-                    if is_excluded:
-                        continue
-
-                    start_idx = match.start()
-                    context_start = max(0, start_idx - 30)
-                    context_end = min(len(text), start_idx + 35)
-                    context = segment['content'][context_start:context_end]
-                    is_sentence_end = bool(re.match(r'[.!?]', text[next_char_idx:next_char_idx+1] if next_char_idx < len(text) else ''))
-                    
-                    right_instances.append({
-                        'timestamp': segment['timestamp'],
-                        'time_formatted': str(timedelta(seconds=int(segment['timestamp']))),
-                        'context': context,
-                        'is_sentence_end': is_sentence_end,
-                        'speaker': segment['speaker']
-                    })
-            analysis_path = 'data/processed/full_podcast/right_analysis_results.json'
+                
+                if is_excluded:
+                    continue
+                
+                # Get context directly from surrounding words
+                context_words = [s['word'] for s in words_data[max(0, i-10):min(len(words_data), i+11)]]
+                context = " ".join(context_words)
+                
+                right_instances.append({
+                    'start_time': segment['start'],
+                    'end_time': segment['end'],
+                    'time_formatted': str(timedelta(seconds=int(segment['start']))),
+                    'context': context,
+                    'speaker': segment['speaker'] # Use the remapped speaker name
+                })
 
         # Save analysis results
-        with open(analysis_path, 'w', encoding='utf-8') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             json.dump({
                 'right_instances': right_instances,
                 'excluded_phrases_counts': dict(excluded_counts)
             }, f, indent=2)
 
-        print(f"Saved analysis to {analysis_path}")
+        print(f"Saved analysis to {output_path}")
         return right_instances, dict(excluded_counts)
         
     def get_speaking_time(self):
